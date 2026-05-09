@@ -1,0 +1,15 @@
+# PaddleOCR 核心依赖
+paddlepaddle==2.6.2
+paddleocr==2.7.3
+
+# Web 框架（可选，用于提供 API 服务）
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# 图像处理
+Pillow==10.1.0
+opencv-python-headless==4.8.1.78
+
+# 工具类
+numpy==1.24.3
