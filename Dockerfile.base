@@ -8,8 +8,23 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     TZ=Asia/Shanghai
 
-# 安装系统依赖
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# 中国大陆访问 deb.debian.org 常超时：默认将 apt 换为清华镜像。
+# 海外构建可关闭：docker build --build-arg APT_USE_MIRROR=0 -f Dockerfile.base .
+# 或在调用 build-base.sh 前：export APT_USE_MIRROR=0
+ARG APT_USE_MIRROR=1
+RUN set -eux; \
+    if [ "$APT_USE_MIRROR" = "1" ]; then \
+      for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do \
+        [ -f "$f" ] || continue; \
+        sed -i \
+          -e 's|http://deb.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g' \
+          -e 's|https://deb.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g' \
+          -e 's|http://security.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g' \
+          -e 's|https://security.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g' \
+          "$f"; \
+      done; \
+    fi; \
+    apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
     libsm6 \
