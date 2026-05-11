@@ -11,9 +11,22 @@
 
 默认端口：**8088**。
 
+默认采用 CPU 推理；如需 GPU 推理，可通过环境变量 `OCR_USE_GPU=true` 开启（前提：镜像与宿主机已具备 CUDA/cuDNN 与 `paddlepaddle-gpu` 运行条件）。
+
 ## 环境要求
 
-- 任意支持 Docker 的主机（文档示例以 macOS + [Docker Desktop](https://www.docker.com/products/docker-desktop/) 为参考）
+- 选型建议（在成本、速度、并发之间权衡）：
+
+| 对比维度 | CPU 路线 | GPU 路线 |
+|------|------|------|
+| 硬件成本 | 低，现有服务器通常可直接部署 | 高，需要 NVIDIA GPU 与对应驱动栈 |
+| 处理速度 | 较慢（参考：10 页复杂 PDF 约 3-5 分钟） | 显著更快（同任务约 20-40 秒，约 5-10 倍） |
+| 并发能力 | 偏弱，适合低到中并发 | 偏强，适合高并发与实时场景 |
+| 显存/内存 | 主要消耗系统内存（参考约 4 GB 可起步） | 主要消耗显存（基础约 2.4 GB，复杂任务峰值可到 6 GB） |
+| 环境配置复杂度 | 简单：安装 CPU 版 `paddlepaddle` 即可 | 较复杂：需匹配 CUDA、cuDNN、驱动与 `paddlepaddle-gpu` |
+| 硬件生态 | 通用 X86/ARM 平台 | 主流为 NVIDIA；其他加速硬件需额外适配方案 |
+| 操作系统版本建议 | Linux：Ubuntu 22.04+ / Debian 12+ / CentOS Stream 9+ | Linux：Ubuntu 22.04 LTS 或 Debian 12（需安装 NVIDIA Driver + NVIDIA Container Toolkit） |
+| 服务器配置建议 | 4 vCPU / 8 GB RAM 起步（中等并发），SSD >= 30 GB | 8 vCPU / 16 GB RAM 起步，NVIDIA T4（16 GB）或更高，SSD >= 50 GB |
 
 ## 快速开始
 

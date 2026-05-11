@@ -8,6 +8,7 @@ class Settings(BaseSettings):
 
     service_name: str = "PaddleOCR Service"
     service_version: str = "2.0.0"
+    ocr_use_gpu: bool = False
 
     default_invoice_compute_mode: str = "local"
     invoice_remote_base_url: str | None = None

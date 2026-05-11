@@ -5,6 +5,7 @@ from typing import Any
 import cv2
 import numpy as np
 from paddleocr import PaddleOCR
+from app.config import get_settings
 
 _ocr_engines: dict[str, PaddleOCR] = {}
 
@@ -21,12 +22,13 @@ _LANG_MAP = {
 def get_ocr_engine(lang: str = "ch") -> PaddleOCR:
     lang_key = _LANG_MAP.get(lang.lower(), "ch")
     if lang_key not in _ocr_engines:
+        settings = get_settings()
         _ocr_engines[lang_key] = PaddleOCR(
             use_angle_cls=True,
             lang=lang_key,
             show_log=False,
-            use_gpu=False,
-            enable_mkldnn=True,
+            use_gpu=settings.ocr_use_gpu,
+            enable_mkldnn=not settings.ocr_use_gpu,
             det_db_thresh=0.3,
             det_db_box_thresh=0.5,
             det_db_unclip_ratio=1.6,
