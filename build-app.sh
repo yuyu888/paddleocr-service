@@ -9,7 +9,7 @@ set -e
 
 TAG="${1:-latest}"
 BASE_TAG="${2:-latest}"
-IMAGE_NAME="paddleocr-service-v3:${TAG}"
+IMAGE_NAME="paddleocr-service:${TAG}"
 BASE_IMAGE="paddleocr-service-base:${BASE_TAG}"
 
 cd "$(dirname "$0")"

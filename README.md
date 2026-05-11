@@ -1,10 +1,10 @@
-# PaddleOCR Service v2
+# PaddleOCR Service
 
 基于 [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) 与 [FastAPI](https://fastapi.tiangolo.com/) 的 HTTP OCR 服务，支持 Docker 分层构建：基础镜像固定依赖与模型，应用镜像仅包含业务代码，便于频繁迭代。
 
 ## 功能概览
 
-- 图片 OCR：文件上传、Base64、图片 URL
+- 图片 OCR：文件上传、Base64、批量图片
 - 多语言引擎按需加载（中文、英文、日韩德法等）
 - 健康检查与接口文档（Swagger）
 
@@ -32,7 +32,7 @@
 在项目根目录执行：
 
 ```bash
-cd /path/to/paddleocr-service-v2
+cd /path/to/paddleocr-service
 
 # 1. 构建基础镜像（耗时较长，首次约数分钟至十几分钟）
 chmod +x build-base.sh build-app.sh   # 若尚未可执行
@@ -42,7 +42,7 @@ chmod +x build-base.sh build-app.sh   # 若尚未可执行
 ./build-app.sh
 
 # 3. 启动容器
-docker run -d -p 8088:8088 --name paddleocr-service paddleocr-service-v3:latest
+docker run -d -p 8088:8088 --name paddleocr-service paddleocr-service:latest
 
 # 4. 查看日志
 docker logs -f paddleocr-service
@@ -50,7 +50,7 @@ docker logs -f paddleocr-service
 
 浏览器打开：<http://localhost:8088/docs> 查看交互式 API 文档。
 
-根路径 <http://localhost:8088/> 会返回可用接口列表摘要。
+根路径 <http://localhost:8088/> 会返回服务信息摘要。
 
 ## 日常开发：只改业务代码时
 
@@ -59,7 +59,7 @@ docker logs -f paddleocr-service
 ```bash
 ./build-app.sh
 docker rm -f paddleocr-service
-docker run -d -p 8088:8088 --name paddleocr-service paddleocr-service-v3:latest
+docker run -d -p 8088:8088 --name paddleocr-service paddleocr-service:latest
 ```
 
 无需重新执行 `./build-base.sh`，除非依赖或基础环境有变。
@@ -97,7 +97,7 @@ docker logs -f paddleocr-service # 跟随日志
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/` | 服务信息与接口列表 |
+| GET | `/` | 服务信息摘要 |
 | GET | `/health` | 健康检查 |
 | GET | `/languages` | 支持的语言 |
 | POST | `/ocr` | 上传图片文件 OCR |
@@ -115,18 +115,20 @@ curl http://localhost:8088/health
 返回示例：
 
 ```json
-{"status": "healthy", "engines_loaded": ["ch"]}
+{"status": "healthy", "engines_loaded": []}
 ```
 
-## 调用示例（使用 `invoice/` 中的样本图片）
+完成 OCR 调用后，`engines_loaded` 会包含已加载的语言，例如 `ch`。
 
-仓库自带 `invoice/` 目录下的测试图片，下面的命令在项目根目录执行即可。
+## 调用示例
+
+下面的命令在项目根目录执行，将 `./sample.jpg` 替换为你的本地图片路径。
 
 ### 1. 单图 OCR（文件上传）
 
 ```bash
 curl -X POST http://localhost:8088/ocr \
-  -F "file=@invoice/1201.jpg" \
+  -F "file=@./sample.jpg" \
   -F "lang=ch" \
   -F "return_text_only=false"
 ```
@@ -135,7 +137,7 @@ curl -X POST http://localhost:8088/ocr \
 
 ```bash
 curl -X POST http://localhost:8088/ocr \
-  -F "file=@invoice/1201.jpg" \
+  -F "file=@./sample.jpg" \
   -F "lang=ch" \
   -F "return_text_only=true"
 ```
@@ -144,14 +146,14 @@ curl -X POST http://localhost:8088/ocr \
 
 ```bash
 curl -s -X POST http://localhost:8088/ocr \
-  -F "file=@invoice/1202.png" \
+  -F "file=@./sample.jpg" \
   -F "lang=ch" | jq -r '.full_text'
 ```
 
 ### 2. Base64 OCR
 
 ```bash
-IMG_B64=$(base64 -i invoice/1201.jpg)
+IMG_B64=$(base64 -i ./sample.jpg)
 
 curl -X POST http://localhost:8088/ocr/base64 \
   -H "Content-Type: application/json" \
@@ -162,9 +164,8 @@ curl -X POST http://localhost:8088/ocr/base64 \
 
 ```bash
 curl -X POST http://localhost:8088/ocr/batch \
-  -F "files=@invoice/1201.jpg" \
-  -F "files=@invoice/1202.png" \
-  -F "files=@invoice/20251209-173718.png" \
+  -F "files=@./sample-1.jpg" \
+  -F "files=@./sample-2.png" \
   -F "lang=ch" \
   -F "return_text_only=true"
 ```
@@ -175,7 +176,7 @@ curl -X POST http://localhost:8088/ocr/batch \
 import requests
 
 url = "http://localhost:8088/ocr"
-with open("invoice/1201.jpg", "rb") as f:
+with open("sample.jpg", "rb") as f:
     resp = requests.post(
         url,
         files={"file": f},
